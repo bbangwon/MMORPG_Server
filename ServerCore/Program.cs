@@ -2,21 +2,59 @@
 {
     class Program
     {
-        static volatile int x = 0;
-        static int y = 0;
-        static int r1 = 0;
-        static int r2 = 0;
-
 
 
         static void Main(string[] args)
         {
-            ThreadStudy4();
+            ThreadStudy5();
+
+            //ThreadStudy4();
             //ThreadStudy3();
             //ThreadStudy();
             //ThreadStudy2();
             //CacheStudy();
         }
+
+
+
+
+
+        static int number = 0;
+        private static void ThreadStudy5()
+        {
+            void Thread_1()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    Interlocked.Increment(ref number);                    
+                }
+            }
+
+            void Thread_2()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    Interlocked.Decrement(ref number);
+                }
+            }
+
+            Task t1 = new Task(Thread_1);
+            Task t2 = new Task(Thread_2);
+            t1.Start();
+            t2.Start();
+
+            Task.WaitAll(t1, t2);
+
+            Console.WriteLine(number);
+        }
+
+
+
+
+        static volatile int x = 0;
+        static int y = 0;
+        static int r1 = 0;
+        static int r2 = 0;
 
         static void ThreadStudy4()
         {
