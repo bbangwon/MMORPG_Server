@@ -6,8 +6,9 @@
 
         static void Main(string[] args)
         {
-            ThreadStudy5();
+            ThreadStudy6();
 
+            //ThreadStudy5();
             //ThreadStudy4();
             //ThreadStudy3();
             //ThreadStudy();
@@ -15,18 +16,52 @@
             //CacheStudy();
         }
 
-
-
-
-
         static int number = 0;
+        static object _obj = new object();
+
+        private static void ThreadStudy6()
+        {
+            void Thread_1()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    //상호배제 Mutual Exclusive
+                    Monitor.Enter(_obj);
+                    number++;
+                    Monitor.Exit(_obj);
+                }
+            }
+
+            void Thread_2()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    lock(_obj)
+                    {
+                        number--;
+                    }
+                }
+            }
+
+            Task t1 = new Task(Thread_1);
+            Task t2 = new Task(Thread_2);
+            t1.Start();
+            t2.Start();
+
+            Task.WaitAll(t1, t2);
+
+            Console.WriteLine(number);
+        }
+
         private static void ThreadStudy5()
         {
             void Thread_1()
             {
                 for (int i = 0; i < 100000; i++)
                 {
+                    int prev = number;
                     Interlocked.Increment(ref number);                    
+                    int next = number;
                 }
             }
 
