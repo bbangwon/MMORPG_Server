@@ -1,5 +1,31 @@
 ﻿namespace ServerCore
 {
+    class SpinLock
+    {
+        volatile int _locked = 0;
+
+        public void Acquire()
+        {
+            while (true) 
+            {
+                //int original = Interlocked.Exchange(ref _locked, 1);
+                //if (original == 0) //아무도 없는 상태, 1을 리턴했다면 이미 잡고 있는 상태
+                //    break;
+
+                // CAS Compare-And-Swap
+                int expected = 0;   //내가 예상한 값
+                int desired = 1;    //내가 원하는 값(예상한 값이 맞다면 1로 대입하고 싶다..)
+                if (Interlocked.CompareExchange(ref _locked, desired, expected) == expected)
+                    break;
+            }
+        }
+
+        public void Release()
+        {
+            _locked = 0;
+        }
+    }
+
     class FastLock
     {
         int id;
@@ -51,7 +77,8 @@
     {
         static void Main(string[] args)
         {
-            ThreadStudy6();
+            ThreadStudy7();
+            //ThreadStudy6();
 
             //ThreadStudy5();
             //ThreadStudy4();
@@ -63,6 +90,40 @@
 
         static int number = 0;
         static object _obj = new object();
+        static SpinLock _lock = new SpinLock();
+
+        private static void ThreadStudy7()
+        {
+            void Thread_1()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    _lock.Acquire();
+                    number++;
+                    _lock.Release();
+                }
+            }
+
+            void Thread_2()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    _lock.Acquire();
+                    number--;
+                    _lock.Release();
+                }
+            }
+
+            Task t1 = new Task(Thread_1);
+            Task t2 = new Task(Thread_2);
+            t1.Start();
+            t2.Start();
+
+            Task.WaitAll(t1, t2);
+
+            Console.WriteLine(number);
+
+        }
 
         private static void ThreadStudy6()
         {
