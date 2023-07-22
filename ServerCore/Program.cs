@@ -17,6 +17,11 @@
                 int desired = 1;    //내가 원하는 값(예상한 값이 맞다면 1로 대입하고 싶다..)
                 if (Interlocked.CompareExchange(ref _locked, desired, expected) == expected)
                     break;
+
+                //쉬다 올게~
+                //Thread.Sleep(1);
+                //Thread.Sleep(0);
+                Thread.Yield();
             }
         }
 
