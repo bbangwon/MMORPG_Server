@@ -1,5 +1,33 @@
 ﻿namespace ServerCore
 {
+
+
+    class Lock
+    {
+        /// <summary>
+        /// 첫 인자값으로 문이 열린채로 시작할지 문이 닫힌채로 시작할지 설정
+        /// bool <- 커널
+        /// </summary>
+        AutoResetEvent _auto = new AutoResetEvent(true);
+        ManualResetEvent _manual = new ManualResetEvent(true);
+
+        public void Acquire()
+        {
+            //_auto.WaitOne();   //입장시도(true인 상태여서)
+            ////_auto.Reset();     //bool  => false로 바꿔주지만 WaitOne에서 같이 처리됨
+
+            _manual.WaitOne();
+            _manual.Reset();
+        }
+
+        public void Release()
+        {
+            //_auto.Set();       //풀어줌
+
+            _manual.Set();
+        }
+    }
+
     class SpinLock
     {
         volatile int _locked = 0;
@@ -82,7 +110,8 @@
     {
         static void Main(string[] args)
         {
-            ThreadStudy7();
+            ThreadStudy8();
+            //ThreadStudy7();
             //ThreadStudy6();
 
             //ThreadStudy5();
@@ -95,7 +124,40 @@
 
         static int number = 0;
         static object _obj = new object();
-        static SpinLock _lock = new SpinLock();
+        static Lock _lock = new Lock();
+        static Mutex _mutex = new Mutex();
+
+        private static void ThreadStudy8()
+        {
+            void Thread_1()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    _mutex.WaitOne();
+                    number++;
+                    _mutex.ReleaseMutex();
+                }
+            }
+
+            void Thread_2()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    _mutex.WaitOne();
+                    number--;
+                    _mutex.ReleaseMutex();
+                }
+            }
+
+            Task t1 = new Task(Thread_1);
+            Task t2 = new Task(Thread_2);
+            t1.Start();
+            t2.Start();
+
+            Task.WaitAll(t1, t2);
+
+            Console.WriteLine(number);
+        }
 
         private static void ThreadStudy7()
         {
@@ -127,7 +189,6 @@
             Task.WaitAll(t1, t2);
 
             Console.WriteLine(number);
-
         }
 
         private static void ThreadStudy6()
