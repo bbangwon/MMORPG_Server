@@ -1,6 +1,34 @@
 ﻿namespace ServerCore
 {
+    /// <summary>
+    /// Read는 마음대로 하는데.. Write할때만 ReadLock도 걸리는..
+    /// </summary>
+    class RWLock
+    {
+        static ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 
+        class Reward
+        {
+
+        }
+
+        static Reward GetRewardById(int id)
+        {
+            _lock.EnterReadLock();
+            
+            _lock.ExitReadLock();
+            return null;
+        }
+
+        static void AddReward(Reward reward)
+        {
+            _lock.EnterWriteLock();
+
+            _lock.ExitWriteLock();
+        }
+
+
+    }
 
     class Lock
     {
