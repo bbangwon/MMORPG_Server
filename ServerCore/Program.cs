@@ -138,7 +138,8 @@
     {
         static void Main(string[] args)
         {
-            ThreadStudy8();
+            ThreadStudy9();
+            //ThreadStudy8();
             //ThreadStudy7();
             //ThreadStudy6();
 
@@ -154,6 +155,38 @@
         static object _obj = new object();
         static Lock _lock = new Lock();
         static Mutex _mutex = new Mutex();
+
+        static volatile int count = 0;
+        static ReaderWriterLockDemo.Lock _lock2 = new ReaderWriterLockDemo.Lock();
+
+        private static void ThreadStudy9()
+        {
+            Task t1 = new Task(delegate ()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    _lock2.WriteLock();
+                    count++;
+                    _lock2.WriteUnlock();
+                }
+            });
+
+            Task t2 = new Task(delegate ()
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    _lock2.WriteLock();
+                    count--;
+                    _lock2.WriteUnlock();
+                }
+            });
+
+            t1.Start();
+            t2.Start();
+
+            Task.WaitAll(t1, t2);
+            Console.WriteLine(count);
+        }
 
         private static void ThreadStudy8()
         {
