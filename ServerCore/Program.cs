@@ -1,4 +1,6 @@
-﻿namespace ServerCore
+﻿using Microsoft.VisualBasic;
+
+namespace ServerCore
 {
     /// <summary>
     /// Read는 마음대로 하는데.. Write할때만 ReadLock도 걸리는..
@@ -138,6 +140,7 @@
     {
         static void Main(string[] args)
         {
+            TLSStudy();
             ThreadStudy9();
             //ThreadStudy8();
             //ThreadStudy7();
@@ -149,6 +152,28 @@
             //ThreadStudy();
             //ThreadStudy2();
             //CacheStudy();
+        }
+
+        private static void TLSStudy()
+        {
+            ThreadLocal<string> ThreadName = new ThreadLocal<string>(() => $"My Name Is {Thread.CurrentThread.ManagedThreadId}");
+            //string ThreadName;
+
+            void WhoAmI()
+            {
+                //ThreadName.Value = $"My Name Is {Thread.CurrentThread.ManagedThreadId}";
+                bool repeat = ThreadName.IsValueCreated;    
+                if(repeat)
+                    Console.WriteLine(ThreadName.Value + "(repeat)");
+                else
+                    Console.WriteLine(ThreadName.Value);
+            }
+
+            ThreadPool.SetMinThreads(1, 1);
+            ThreadPool.SetMaxThreads(3, 3);
+            Parallel.Invoke(WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI);
+
+            ThreadName.Dispose();
         }
 
         static int number = 0;
