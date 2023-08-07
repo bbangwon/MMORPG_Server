@@ -10,25 +10,21 @@ namespace ServerCore
 
         static void OnAcceptHandler(Socket? clientSocket)
         {
+            if (clientSocket == null)
+                return;
+
             try
             {
-                if (clientSocket == null)
-                    return;
-
-                //Recv
-                byte[] recvBuff = new byte[1024];
-                int recvBytes = clientSocket.Receive(recvBuff);
-
-                string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes).Trim();
-                Console.WriteLine($"[From Client] {recvData}");
+                Session session = new Session();
+                session.Start(clientSocket);
 
                 //Send
                 byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server !");
-                clientSocket.Send(sendBuff);
+                session.Send(sendBuff);
 
-                //Close
-                clientSocket.Shutdown(SocketShutdown.Both); //Shutdown 예고(우아한 종료)
-                clientSocket.Close();   //종료
+                Thread.Sleep(1000);
+
+                session.Disconnect();
             }
             catch (Exception e)
             {
