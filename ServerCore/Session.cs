@@ -5,13 +5,13 @@ namespace ServerCore
 {
     public abstract class Session
     {
-        Socket _socket;
+        Socket? _socket;
         int _disconnected = 0;
 
         RecvBuffer _recvBuffer = new RecvBuffer(1024);
 
         object _lock = new object();
-        Queue<byte[]> _sendQueue = new Queue<byte[]>();
+        Queue<ArraySegment<byte>> _sendQueue = new Queue<ArraySegment<byte>>();
         List<ArraySegment<byte>> _pendingList = new List<ArraySegment<byte>>();
 
         //Sned는 재사용을 위해 _sendQueue에 추가
@@ -34,7 +34,7 @@ namespace ServerCore
             RegisterRecv();
         }
 
-        public void Send(byte[] sendBuff)
+        public void Send(ArraySegment<byte> sendBuff)
         {
             lock (_lock)
             {
@@ -64,15 +64,15 @@ namespace ServerCore
             
             while (_sendQueue.Count > 0)
             {
-                byte[] buff = _sendQueue.Dequeue();
+                ArraySegment<byte> buff = _sendQueue.Dequeue();
                 //ArraySegment는 어떤 배열의 일부를 나타냄
                 //ArraySegment는 Struct로 Stack영역에 할당됨
 
-                _pendingList.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+                _pendingList.Add(buff);
             }
             _sendArgs.BufferList = _pendingList;
 
-            bool pending = _socket.SendAsync(_sendArgs);
+            bool pending = _socket!.SendAsync(_sendArgs);
             if (!pending)
                 OnSendCompleted(null, _sendArgs);
         }
@@ -111,7 +111,7 @@ namespace ServerCore
             ArraySegment<byte> segment = _recvBuffer.WriteSegment;
             _recvArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
 
-            bool pending = _socket.ReceiveAsync(_recvArgs);
+            bool pending = _socket!.ReceiveAsync(_recvArgs);
             if (!pending)
                 OnRecvCompleted(null, _recvArgs);
         }
