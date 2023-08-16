@@ -4,23 +4,60 @@ using System.Text;
 
 namespace DummyClient
 {
-    public class Packet
+    public abstract class Packet
     {
         public ushort size;
         public ushort packetId;
+
+        public abstract ArraySegment<byte>? Write();
+        public abstract void Read(ArraySegment<byte> s);
     }
 
     class PlayerInfoReq : Packet
     {
         public long playerId;
         public int hp;
-    }
 
-    class PlayerInfoOk : Packet
-    {
-        public long playerId;
-        public int hp;
-        public int attack;
+        public PlayerInfoReq()
+        {
+            this.packetId = (ushort)PacketID.PlayerInfoReq;
+        }
+
+        public override void Read(ArraySegment<byte> s)
+        {
+            ushort count = 0;
+            
+            //ushort size = BitConverter.ToUInt16(s.Array!, s.Offset + count);
+            count += 2;
+            //ushort id = BitConverter.ToUInt16(s.Array!, s.Offset + count);
+            count += 2;
+
+            this.playerId = BitConverter.ToInt64(new ReadOnlySpan<byte>(s.Array!, s.Offset + count, s.Count - count));
+            count += 8;
+        }
+
+        public override ArraySegment<byte>? Write()
+        {
+            ArraySegment<byte> s = SendBufferHelper.Open(4096);
+
+            ushort count = 0;
+            //바로 직접 쓰는 방법
+            bool success = true;
+
+            count += 2;
+            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset + count, s.Count - count), this.packetId);
+            count += 2;
+            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset + count, s.Count - count), this.playerId);
+            count += 8;
+
+            //Size 채워주기
+            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset, s.Count), count);
+
+            if(!success)
+                return null;
+
+            return SendBufferHelper.Close(count);
+        }
     }
 
     public enum PacketID
@@ -44,28 +81,32 @@ namespace DummyClient
         {
             Console.WriteLine($"OnConnected : {endPoint}");
             PlayerInfoReq packet = new PlayerInfoReq() { 
-                packetId = (ushort)PacketID.PlayerInfoReq, 
                 playerId = 1001 
             };
 
+            ArraySegment<byte>? openSegment = packet.Write();
+            if(openSegment != null)
+                Send(openSegment.Value);
+
             //for (int i = 0; i < 5; i++)
             {
+
                 //Send
-                ArraySegment<byte> s = SendBufferHelper.Open(4096);
+                //ArraySegment<byte> s = SendBufferHelper.Open(4096);
 
-                ushort count = 0;
+                //ushort count = 0;
 
-                //바로 직접 쓰는 방법
-                bool success = true;
+                ////바로 직접 쓰는 방법
+                //bool success = true;
                 
-                count += 2;
-                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset + count, s.Count - count), packet.packetId);
-                count += 2;
-                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset + count, s.Count - count), packet.playerId);
-                count += 8;
+                //count += 2;
+                //success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset + count, s.Count - count), packet.packetId);
+                //count += 2;
+                //success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset + count, s.Count - count), packet.playerId);
+                //count += 8;
 
-                //Size 채워주기
-                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset, s.Count), count);
+                ////Size 채워주기
+                //success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array!, s.Offset, s.Count), count);
 
                 //안정성을 위해 만들어졌으나.. 속도가 느려짐
                 //byte[] size = BitConverter.GetBytes(packet.size);
@@ -81,10 +122,10 @@ namespace DummyClient
                 //Buffer.BlockCopy(playerId, 0, s.Array!, s.Offset + count, 8);
                 //count += 8;
 
-                ArraySegment<byte> sendBuff = SendBufferHelper.Close(count);
+                //ArraySegment<byte> sendBuff = SendBufferHelper.Close(count);
 
-                if(success)
-                    Send(sendBuff);
+                //if(success)
+                //    Send(sendBuff);
             }
         }
 
