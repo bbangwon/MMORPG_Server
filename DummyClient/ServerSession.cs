@@ -18,6 +18,43 @@ namespace DummyClient
         public long playerId;
         public string? name;
 
+        public struct SkillInfo
+        {
+            public int id;
+            public short level;
+            public float duration;
+
+            public bool Write(Span<byte> s, ref ushort count)
+            {
+                bool success = true;
+
+                success &= BitConverter.TryWriteBytes(s[count..], this.id);
+                count += sizeof(int);
+
+                success &= BitConverter.TryWriteBytes(s[count..], this.level);
+                count += sizeof(short);
+
+                success &= BitConverter.TryWriteBytes(s[count..], this.duration);
+                count += sizeof(float);
+
+                return success;
+            }
+
+            public void Read(ReadOnlySpan<byte> s, ref ushort count)
+            {
+                this.id = BitConverter.ToInt32(s[count..]);
+                count += sizeof(int);
+
+                this.level = BitConverter.ToInt16(s[count..]);
+                count += sizeof(short);
+
+                this.duration = BitConverter.ToSingle(s[count..]);
+                count += sizeof(float);
+            }
+        }
+
+        public List<SkillInfo> skills = new List<SkillInfo>();
+
         public PlayerInfoReq()
         {
             this.packetId = (ushort)PacketID.PlayerInfoReq;
@@ -42,6 +79,17 @@ namespace DummyClient
 
             this.name = Encoding.Unicode.GetString(s[count..(count + nameLen)]);
             count += nameLen;
+
+            skills.Clear();
+            ushort skillLen = BitConverter.ToUInt16(s[count..]);
+            count += sizeof(ushort);
+
+            for (int i = 0; i < skillLen; i++)
+            {
+                SkillInfo skill = new SkillInfo();
+                skill.Read(s, ref count);
+                this.skills.Add(skill);
+            }
         }
 
         public override ArraySegment<byte>? Write()
@@ -77,6 +125,17 @@ namespace DummyClient
 
             count += nameLen;
 
+            // Skill List
+            success &= BitConverter.TryWriteBytes(s[count..], (ushort)this.skills.Count);
+            count += sizeof(ushort);
+
+            foreach (SkillInfo skill in this.skills)
+            {
+                success &= skill.Write(s, ref count);
+            }
+
+
+
             //Size 채워주기
             success &= BitConverter.TryWriteBytes(s, count);
 
@@ -111,6 +170,11 @@ namespace DummyClient
                 playerId = 1001,
                 name = "ABCD"
             };
+
+            packet.skills.Add(new PlayerInfoReq.SkillInfo() { id = 101, level = 1, duration = 3.0f });
+            packet.skills.Add(new PlayerInfoReq.SkillInfo() { id = 102, level = 2, duration = 5.0f });
+            packet.skills.Add(new PlayerInfoReq.SkillInfo() { id = 103, level = 3, duration = 7.0f });
+
 
             ArraySegment<byte>? openSegment = packet.Write();
             if(openSegment != null)
