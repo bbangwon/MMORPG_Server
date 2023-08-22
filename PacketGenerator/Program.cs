@@ -1,11 +1,12 @@
-﻿using System.Reflection;
-using System.Xml;
+﻿using System.Xml;
 
 namespace PacketGenerator
 {
     class Program
     {
         static string? genPacket;
+        static short packetId;
+        static string? packetEnums;
 
         static void Main(string[] args)
         {
@@ -26,7 +27,8 @@ namespace PacketGenerator
                 //Console.WriteLine(r.Name + " " + r["name"]);
             }
 
-            File.WriteAllText("GenPackets.cs", genPacket);
+            string fileText = string.Format(PacketFormat.fileFormat, packetEnums, genPacket);
+            File.WriteAllText("GenPackets.cs", fileText);
         }
 
         private static void ParsePacket(XmlReader r)
@@ -53,6 +55,8 @@ namespace PacketGenerator
 
             genPacket += string.Format(PacketFormat.packetFormat, 
                 packetName, t.Item1, t.Item2, t.Item3);
+            packetEnums += string.Format(PacketFormat.packetEnumFormat, 
+                               packetName, ++packetId) + Environment.NewLine + "\t";
         }
 
         // {1} : 멤버 변수들
@@ -89,6 +93,12 @@ namespace PacketGenerator
                 string memeberType = r.Name.ToLower();
                 switch (memeberType)
                 {
+                    case "byte":
+                    case "sbyte":
+                        memberCode += string.Format(PacketFormat.memberFormat, memeberType, memberName);
+                        readCode += string.Format(PacketFormat.readByteFormat, memberName, memeberType);
+                        writeCode += string.Format(PacketFormat.writeByteFormat, memberName, memeberType);
+                        break;
                     case "bool":
                     case "short":
                     case "ushort":

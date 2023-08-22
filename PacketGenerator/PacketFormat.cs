@@ -2,6 +2,25 @@
 {
     class PacketFormat
     {
+        // {0} : 패킷 이름/번호 목록
+        // {1} : 패킷 클래스들
+        public static string fileFormat =
+@"using ServerCore;
+using System.Net;
+using System.Text;
+
+public enum PacketID
+{{
+    {0}
+}}
+
+{1}
+";
+        // {0} : 패킷 이름
+        // {1} : 패킷 번호
+        public static string packetEnumFormat =
+@"{0} = {1},";
+
         // {0} : 패킷이름
         // {1} : 멤버 변수들
         // {2} : 멤버 변수 읽는 부분
@@ -79,6 +98,12 @@ public List<{0}> {1}s = new List<{0}>();";
 count += sizeof({2});";
 
         // {0} : 멤버 변수 이름
+        // {1} : 변수형식
+        public static string readByteFormat =
+@"{0} = ({1})s[count];
+count += sizeof({1});";
+
+        // {0} : 멤버 변수 이름
         public static string readStringFormat =
 @"ushort {0}Len = BitConverter.ToUInt16(s[count..]);
 count += sizeof(ushort);
@@ -103,6 +128,12 @@ for (int i = 0; i < {1}Len; i++)
         // {1} : 변수형식
         public static string writeFormat =
 @"success &= BitConverter.TryWriteBytes(s[count..], this.{0});
+count += sizeof({1});";
+
+        // {0} : 멤버 변수 이름
+        // {1} : 변수형식
+        public static string writeByteFormat =
+@"s[count] = (byte)this.{0};
 count += sizeof({1});";
 
         // {0} : 멤버 변수 이름
