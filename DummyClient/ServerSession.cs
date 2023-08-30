@@ -18,24 +18,24 @@ namespace DummyClient
         public override void OnConnected(EndPoint endPoint)
         {
             Console.WriteLine($"OnConnected : {endPoint}");
-            PlayerInfoReq packet = new PlayerInfoReq() { 
+            C_PlayerInfoReq packet = new C_PlayerInfoReq() { 
                 playerId = 1001,
                 name = "ABCD"
             };
 
             packet.skills.Add(
-                new PlayerInfoReq.Skill() 
+                new C_PlayerInfoReq.Skill() 
                 { 
                     id = 101, 
                     level = 1, 
                     duration = 3.0f,
-                    attributes = new List<PlayerInfoReq.Skill.Attribute>()
+                    attributes = new List<C_PlayerInfoReq.Skill.Attribute>()
                     {
-                        new PlayerInfoReq.Skill.Attribute() { att = 77 },                        
+                        new C_PlayerInfoReq.Skill.Attribute() { att = 77 },                        
                     }                   
                 });
-            packet.skills.Add(new PlayerInfoReq.Skill() { id = 102, level = 2, duration = 5.0f });
-            packet.skills.Add(new PlayerInfoReq.Skill() { id = 103, level = 3, duration = 7.0f });
+            packet.skills.Add(new C_PlayerInfoReq.Skill() { id = 102, level = 2, duration = 5.0f });
+            packet.skills.Add(new C_PlayerInfoReq.Skill() { id = 103, level = 3, duration = 7.0f });
 
 
             ArraySegment<byte>? openSegment = packet.Write();
