@@ -1,4 +1,5 @@
-﻿using ServerCore;
+﻿using Server;
+using ServerCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,19 +8,18 @@ using System.Threading.Tasks;
 
 class PacketHandler
 {
-    public static void C_PlayerInfoReqHandler(PacketSession session, IPacket packet)
+    public static void C_ChatHandler(PacketSession session, IPacket packet)
     {
-        if (packet is not C_PlayerInfoReq p)
+        C_Chat? chatPacket = packet as C_Chat;
+        ClientSession? clientSession = session as ClientSession;
+
+        if(clientSession == null || chatPacket == null)
         {
-            Console.WriteLine("PlayerInfoReq cast failed");
             return;
         }
 
-        Console.WriteLine($"PlayerInfoReq {p.playerId} {p.name}");
+        clientSession.Room?.Broadcast(clientSession, chatPacket.chat);
 
-        foreach (C_PlayerInfoReq.Skill skill in p.skills)
-        {
-            Console.WriteLine($"Skill Id({skill.id}) Level({skill.level}) Duration({skill.duration})");
-        }
+
     }
 }

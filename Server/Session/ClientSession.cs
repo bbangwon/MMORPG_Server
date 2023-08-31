@@ -4,26 +4,16 @@ using System.Text;
 
 namespace Server
 {
-
-
     class ClientSession : PacketSession
     {
+        public int SessionId { get; set; }  
+        public GameRoom? Room { get; set; }
+
         public override void OnConnected(EndPoint endPoint)
         {
             Console.WriteLine($"OnConnected : {endPoint}");
 
-            //Packet knight = new Packet() { size = 100, packetId = 10 };
-            
-            //ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
-            //byte[] buffer = BitConverter.GetBytes(knight.size);
-            //byte[] buffer2 = BitConverter.GetBytes(knight.packetId);
-            //Buffer.BlockCopy(buffer, 0, openSegment.Array!, openSegment.Offset, buffer.Length);
-            //Buffer.BlockCopy(buffer2, 0, openSegment.Array!, openSegment.Offset + buffer.Length, buffer2.Length);
-            //ArraySegment<byte> sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
-
-            //Send(sendBuff);
-            Thread.Sleep(5000);
-            Disconnect();
+            Program.Room.Enter(this);
         }
 
         public override void OnRecvPacket(ArraySegment<byte> buffer)
@@ -33,6 +23,13 @@ namespace Server
 
         public override void OnDisconnected(EndPoint endPoint)
         {
+            SessionManager.Instance.Remove(this);
+            if (Room != null)
+            {
+                Room.Leave(this);
+                Room = null;
+            }
+
             Console.WriteLine($"OnDisconnected : {endPoint}");
         }
 
