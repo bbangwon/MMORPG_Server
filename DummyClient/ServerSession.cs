@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DummyClient
 {
-    class ServerSession : Session
+    class ServerSession : PacketSession
     {
         // unsafe구문을 이용한 코드
         //static unsafe void ToBytes(ArraySegment<byte> s, int offset, ulong value)
@@ -88,16 +88,14 @@ namespace DummyClient
             Console.WriteLine($"OnDisconnected : {endPoint}");
         }
 
-        public override int OnRecv(ArraySegment<byte> buffer)
+        public override void OnRecvPacket(ArraySegment<byte> buffer)
         {
-            string recvData = Encoding.UTF8.GetString(buffer.Array!, buffer.Offset, buffer.Count).Trim();
-            Console.WriteLine($"[From Server] {recvData}");
-            return buffer.Count;
+            PacketManager.Instance.OnRecvPacket(this, buffer);
         }
 
         public override void OnSend(int numOfBytes)
         {
-            Console.WriteLine($"Transferred bytes: {numOfBytes}");
+            //Console.WriteLine($"Transferred bytes: {numOfBytes}");
         }
     }
 }
