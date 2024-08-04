@@ -6,8 +6,24 @@ static void MainThread(object? state)
         Console.WriteLine("Hello Thread!");
 }
 
+//Worker 쓰레드
+ThreadPool.SetMinThreads(1, 1);
+ThreadPool.SetMaxThreads(5, 5);
+
+//영영 돌아올수 없는 일감
+for (int i = 0; i < 5; i++)
+    ThreadPool.QueueUserWorkItem(obj => { while (true) { } });
+
 //쓰레드 풀에서 쓰레드를 가져와서 실행
 ThreadPool.QueueUserWorkItem(MainThread);
+
+//new Thread의 경우 직접 관리하므로 여러개를 생성할 수 있음
+//for (int i = 0; i < 1000; i++)
+//{
+//    var t = new Thread(MainThread);
+//    t.IsBackground = true;
+//    t.Start();
+//}
 
 //// 쓰레드 생성
 //var t = new Thread(MainThread);
