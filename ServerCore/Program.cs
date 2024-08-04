@@ -6,13 +6,22 @@ static void MainThread(object? state)
         Console.WriteLine("Hello Thread!");
 }
 
+
+
+
 //Worker 쓰레드
 ThreadPool.SetMinThreads(1, 1);
 ThreadPool.SetMaxThreads(5, 5);
 
-//영영 돌아올수 없는 일감
 for (int i = 0; i < 5; i++)
-    ThreadPool.QueueUserWorkItem(obj => { while (true) { } });
+{
+    Task t = new Task(() => { while (true) { } }, TaskCreationOptions.LongRunning);
+    t.Start();
+}
+
+//영영 돌아올수 없는 일감
+//for (int i = 0; i < 5; i++)
+//    ThreadPool.QueueUserWorkItem(obj => { while (true) { } });
 
 //쓰레드 풀에서 쓰레드를 가져와서 실행
 ThreadPool.QueueUserWorkItem(MainThread);
