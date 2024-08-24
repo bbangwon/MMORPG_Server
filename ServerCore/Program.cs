@@ -1,52 +1,69 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-int count = 0;
-while(true)
+
+Task t1 = new Task(Thread_1);
+Task t2 = new Task(Thread_2);
+t1.Start();
+t2.Start();
+
+Task.WaitAll(t1, t2);
+Console.WriteLine(_num);
+
+class SpinLock
 {
-    count++;
-    x = 0;
-    y = 0;
-    r1 = 0;
-    r2 = 0;
+    volatile int _locked = 0;
+    public void Acquire()
+    {
+        while (true)
+        {
+            //반환값이 원래 값이 나오기 때문에 1이 나온다면 이미 락이 걸려있는 상태
+            //이때 다른 Task가 Release를 해서 0으로 만들어준다면 락이 풀리는 것
+            //int original = Interlocked.Exchange(ref _locked, 1);
 
-    Task t1 = new Task(Thread_1);
-    Task t2 = new Task(Thread_2);
+            //original은 경합하지 않는 Stack에 저장되어 있는 값이기 때문에 if문으로 비교해도 된다.
+            //if (original == 0)
+            //    break;
 
-    t1.Start();
-    t2.Start();
+            //_locked가 expected와 같을 때만 바꾼다
+            int expected = 0;   //내가 예상한 값 
+            int desired = 1;    //바꿀 값
 
-    Task.WaitAll(t1, t2);
+            //CompareExchange는 원래 값(_locked)과 세번째 param 비교해서 같으면 새로운 값으로 바꾸는 것이다.
+            int original = Interlocked.CompareExchange(ref _locked, desired, expected);
+            if (original == expected)   //원래 값이 내가 예상한 값과 같다면 락을 걸었다는 것
+                break;
+        }
+    }
 
-    if(r1 == 0 && r2 == 0)
-        break;
+    public void Release()
+    {
+        _locked = 0;
+    }
 }
-Console.WriteLine($"{count}번에 빠져나옴");
-
-Console.ReadLine();
-
-
 
 partial class Program
 {
-    static int x = 0;
-    static int y = 0;
-    static int r1 = 0;
-    static int r2 = 0;
+    static int _num = 0;
+    static SpinLock _lock = new SpinLock();
 
     static void Thread_1()
     {
-        y = 1;  //Store y
-        Thread.MemoryBarrier();
-        //----------------------
-        r1 = x; //Load x
+        for(int i = 0; i < 100000; i++)
+        {
+            _lock.Acquire();
+            _num++;
+            _lock.Release();
+        }
     }
 
     static void Thread_2()
     {
-        x = 1;  //Store x
-        Thread.MemoryBarrier();
-        //----------------------
-        r2 = y; //Load x
+        for (int i = 0; i < 100000; i++)
+        {
+            _lock.Acquire();
+            _num--;
+            _lock.Release();
+        }
     }
-
 }
+
