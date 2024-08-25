@@ -32,6 +32,11 @@ class SpinLock
             int original = Interlocked.CompareExchange(ref _locked, desired, expected);
             if (original == expected)   //원래 값이 내가 예상한 값과 같다면 락을 걸었다는 것
                 break;
+
+            //쉬다 올게~
+            //Thread.Sleep(1);    //무조건 휴식 : 1ms 정도 쉬고 싶어요. 
+            //Thread.Sleep(0);    //조건부 양보 : 우선순위가 나보다 같거나 높은 스레드가 없으면 다시 본인한테
+            Thread.Yield();     //관대한 양보 : 지금 실행이 가능한 스레드가 있으면 실행하세요.
         }
     }
 
