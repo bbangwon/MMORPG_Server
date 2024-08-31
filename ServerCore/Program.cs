@@ -1,62 +1,63 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-
-Task t1 = new Task(Thread_1);
-Task t2 = new Task(Thread_2);
-t1.Start();
-t2.Start();
-
-Task.WaitAll(t1, t2);
-Console.WriteLine(_num);
-
-//Event 방식은 조금 더 오래걸림
-class Lock
+lock(_lock)
 {
-    // bool <- 커널
-    //문이 열려있는 상태 : true
-    ManualResetEvent _available = new ManualResetEvent(true);
-    public void Acquire()
-    {
-        //입장 시도
-        _available.WaitOne();
-        //입장 성공시 자동 문이 닫힘
-        _available.Reset(); // <= WaitOne()에서 이미 문이 닫힘
-        
-    }
-
-    public void Release()
-    {
-        //퇴장
-        _available.Set();   //flag = true
-        //문이 열림
-    }
+    
 }
+
+//SpinLock 사용방법
+//SpinLock는 몇번 시도 하다가 답이 없을 경우에는 중간 중간 yield를 호출한다.
+bool lockTaken = false;
+try
+{
+    //lockTaken이 true가 되면 Enter가 성공한 것이다.
+    _lock2.Enter(ref lockTaken);
+}
+finally
+{
+    //Exception이 발생하더라도 Exit는 호출되어야 한다.
+    if (lockTaken)
+        _lock2.Exit();
+}
+
 
 partial class Program
 {
-    static int _num = 0;
-    static Mutex _lock = new Mutex();
+    //내부적으로는 Monitor를 사용한다.
+    static object _lock = new object();
+    static SpinLock _lock2 = new SpinLock();
 
-    static void Thread_1()
+    //많이 느림
+    //같은 프로그램이 아니더라도 순서를 맞추는 동기화가 가능함
+    //MMORPG에서는 거의 사용하지 않음
+    static Mutex _lock3 = new Mutex();
+
+    //[] [] [] [] []
+    class Reward
     {
-        for(int i = 0; i < 100000; i++)
-        {
-            _lock.WaitOne();
-            _lock.WaitOne();
-            _num++;
-            _lock.ReleaseMutex();
-            _lock.ReleaseMutex();
-        }
+
     }
 
-    static void Thread_2()
+    static ReaderWriterLockSlim _lock4 = new ReaderWriterLockSlim();
+
+    //리워드를 찾아서 반환해주는
+    // 99.99999%
+    static Reward? GetRewardById(int id)
     {
-        for (int i = 0; i < 100000; i++)
-        {
-            _lock.WaitOne();
-            _num--;
-            _lock.ReleaseMutex();
-        }
+        //아무도 WriteLock을 가지고 있지 않다면 스레드들이 동시에 읽기를 할 수 있다.
+        //마치 Lock을 걸지 않은 것처럼 동작한다.
+        _lock4.EnterReadLock();
+
+        _lock4.ExitReadLock();
+        return null;
+    }
+
+    // 0.00001%
+    static void AddReward(Reward reward)
+    {
+        _lock4.EnterWriteLock();
+
+        _lock4.ExitWriteLock();
     }
 }
 
