@@ -1,38 +1,41 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using ServerCore;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
-Task t1 = new Task(() =>
+// DNS (Domain Name System)
+string host = Dns.GetHostName();
+IPHostEntry ipHost = Dns.GetHostEntry(host);
+IPAddress ipAddr = ipHost.AddressList[0];
+IPEndPoint endPoint = new(ipAddr, 7777);
+
+Socket listenSocket = new(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+try
 {
-    for (int i = 0; i < 100000; i++)
+    listenSocket.Bind(endPoint);
+    listenSocket.Listen(10);
+
+    while (true)
     {
-        _lock.WriteLock();
-        count++;
-        _lock.WriteUnlock();
+        Console.WriteLine("Listening...");
+
+        Socket clientSocket = listenSocket.Accept();
+
+        byte[] recvBuff = new byte[1024];
+        int recvBytes = clientSocket.Receive(recvBuff);
+        string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
+        Console.WriteLine($"[From Client] {recvData}");
+
+        byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server!");
+        clientSocket.Send(sendBuff);
+
+        clientSocket.Shutdown(SocketShutdown.Both);
+        clientSocket.Close();
     }
-});
-
-Task t2 = new Task(() =>
-{
-    for (int i = 0; i < 100000; i++)
-    {
-        _lock.WriteLock();
-        count--;
-        _lock.WriteUnlock();
-    }
-});
-
-t1.Start();
-t2.Start();
-
-Task.WaitAll(t1, t2);
-
-Console.WriteLine(count);
-
-
-partial class Program
-{
-    static volatile int count = 0;
-    static Lock _lock = new Lock();
 }
-
+catch (Exception e)
+{
+    Console.WriteLine(e.ToString());
+}
