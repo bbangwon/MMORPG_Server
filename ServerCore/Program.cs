@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using ServerCore;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -10,19 +11,16 @@ IPHostEntry ipHost = Dns.GetHostEntry(host);
 IPAddress ipAddr = ipHost.AddressList[0];
 IPEndPoint endPoint = new(ipAddr, 7777);
 
-Socket listenSocket = new(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+Listener listener = new();
+listener.Init(endPoint, OnAcceptHandler);
+Console.WriteLine("Listening...");
 
-try
+while (true);
+
+void OnAcceptHandler(Socket clientSocket)
 {
-    listenSocket.Bind(endPoint);
-    listenSocket.Listen(10);
-
-    while (true)
+    try
     {
-        Console.WriteLine("Listening...");
-
-        Socket clientSocket = listenSocket.Accept();
-
         byte[] recvBuff = new byte[1024];
         int recvBytes = clientSocket.Receive(recvBuff);
         string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
@@ -34,8 +32,8 @@ try
         clientSocket.Shutdown(SocketShutdown.Both);
         clientSocket.Close();
     }
-}
-catch (Exception e)
-{
-    Console.WriteLine(e.ToString());
+    catch (Exception e)
+    {
+        Console.WriteLine(e.ToString());
+    }
 }
