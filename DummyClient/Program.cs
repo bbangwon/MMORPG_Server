@@ -19,8 +19,11 @@ while(true)
         socket.Connect(endPoint);
         Console.WriteLine($"Connected To {socket.RemoteEndPoint}");
 
-        byte[] sendBuff = Encoding.UTF8.GetBytes("Hello World!");
-        int sendBytes = socket.Send(sendBuff);
+        for (int i = 0; i < 5; i++)
+        {
+            byte[] sendBuff = Encoding.UTF8.GetBytes($"Hello World! {i}");
+            int sendBytes = socket.Send(sendBuff);
+        }
 
         byte[] recvBuff = new byte[1024];
         int recvBytes = socket.Receive(recvBuff);
