@@ -10,6 +10,12 @@ namespace ServerCore
         //연결 해제 관리 1일 경우 연결 해제
         int _disconnected = 0;
 
+        object _lock = new();
+        Queue<byte[]> sendQueue = new();
+        bool pending = false;
+
+        SocketAsyncEventArgs sendArgs = new();
+
         public void Start(Socket socket)
         {
             this.socket = socket;
@@ -17,12 +23,19 @@ namespace ServerCore
             recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceiveCompleted);
             recvArgs.SetBuffer(new byte[1024], 0, 1024);
 
+            sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
+
             RegisterReceive(recvArgs);
         }
 
         public void Send(byte[] sendBuff)
         {
-            socket?.Send(sendBuff);
+            lock (_lock)
+            {
+                sendQueue.Enqueue(sendBuff);
+                if (pending == false)
+                    RegisterSend();
+            }
         }
 
         public void Disconnect()
@@ -36,6 +49,54 @@ namespace ServerCore
         }
 
         #region 네트워크 통신
+
+        void RegisterSend()
+        {
+            if (socket == null)
+                return;
+
+            this.pending = true;
+
+            byte[] buff = sendQueue.Dequeue();
+            sendArgs.SetBuffer(buff, 0, buff.Length);
+
+            bool pending = socket.SendAsync(sendArgs);
+            if (pending == false)
+                OnSendCompleted(null, sendArgs);
+        }
+
+        void OnSendCompleted(object? sender, SocketAsyncEventArgs args)
+        {
+            lock (_lock)
+            {
+                if (args.BytesTransferred > 0 && args.SocketError == SocketError.Success)
+                {
+                    //TODO
+                    try
+                    {
+                        if(sendQueue.Count > 0)
+                        {
+                            RegisterSend();
+                        }
+                        else
+                        {
+                            pending = false;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"OnSendCompleted Failed {e}");
+                        throw;
+                    }
+                }
+                else
+                {
+                    // Disconnect
+                    Disconnect();
+                }
+            }
+        }
+
         void RegisterReceive(SocketAsyncEventArgs args)
         {
             if (socket == null)
@@ -65,8 +126,9 @@ namespace ServerCore
             else
             {
                 // Disconnect
+                Disconnect();
             }
-        } 
+        }
         #endregion
     }
 }
