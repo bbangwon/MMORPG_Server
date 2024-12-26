@@ -2,7 +2,6 @@
 
 using ServerCore;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 
 // DNS (Domain Name System)
@@ -12,28 +11,37 @@ IPAddress ipAddr = ipHost.AddressList[0];
 IPEndPoint endPoint = new(ipAddr, 7777);
 
 Listener listener = new();
-listener.Init(endPoint, OnAcceptHandler);
+listener.Init(endPoint, () => new GameSession());
 Console.WriteLine("Listening...");
 
-while (true);
+while (true) ;
 
-void OnAcceptHandler(Socket clientSocket)
+
+class GameSession : Session
 {
-    try
+    public override void OnConnected(EndPoint endPoint)
     {
-        Session session = new();
-        session.Start(clientSocket);
+        Console.WriteLine($"OnConnected : {endPoint}");
 
         byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server!");
-        session.Send(sendBuff);
-
+        Send(sendBuff);
         Thread.Sleep(1000);
-
-        session.Disconnect();
-        session.Disconnect();
+        Disconnect();
     }
-    catch (Exception e)
+
+    public override void OnDisconnected(EndPoint endPoint)
     {
-        Console.WriteLine(e.ToString());
+        Console.WriteLine($"OnDisconnected : {endPoint}");
+    }
+
+    public override void OnRecv(ArraySegment<byte> buffer)
+    {
+        string recvData = Encoding.UTF8.GetString(buffer.Array!, buffer.Offset, buffer.Count);
+        Console.WriteLine($"[From Client] {recvData}");
+    }
+
+    public override void OnSend(int numOfBytes)
+    {
+        Console.WriteLine($"Transferred bytes: {numOfBytes}");
     }
 }

@@ -1,9 +1,9 @@
-﻿using System.Net.Sockets;
-using System.Text;
+﻿using System.Net;
+using System.Net.Sockets;
 
 namespace ServerCore
 {
-    class Session
+    abstract class Session
     {
         Socket? socket;
 
@@ -16,6 +16,11 @@ namespace ServerCore
         List<ArraySegment<byte>> pendingList = new();
         SocketAsyncEventArgs sendArgs = new();
         SocketAsyncEventArgs recvArgs = new();
+
+        public abstract void OnConnected(EndPoint endPoint);
+        public abstract void OnRecv(ArraySegment<byte> buffer);
+        public abstract void OnSend(int numOfBytes);
+        public abstract void OnDisconnected(EndPoint endPoint);
 
         public void Start(Socket socket)
         {
@@ -43,8 +48,12 @@ namespace ServerCore
             if (Interlocked.Exchange(ref _disconnected, 1) == 1)
                 return;
 
-            socket?.Shutdown(SocketShutdown.Both);
-            socket?.Close();
+            if(socket?.RemoteEndPoint != null)
+            {
+                OnDisconnected(socket.RemoteEndPoint);
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+            }
         }
 
         #region 네트워크 통신
@@ -79,7 +88,7 @@ namespace ServerCore
                         sendArgs.BufferList = null;
                         pendingList.Clear();
 
-                        Console.WriteLine($"Transferred bytes: {sendArgs.BytesTransferred}");
+                        OnSend(sendArgs.BytesTransferred);                        
 
                         if (sendQueue.Count > 0)
                         {
@@ -117,8 +126,7 @@ namespace ServerCore
                 //TODO
                 try
                 {
-                    string recvData = Encoding.UTF8.GetString(args.Buffer!, args.Offset, args.BytesTransferred);
-                    Console.WriteLine($"[From Client] {recvData}");
+                    OnRecv(new ArraySegment<byte>(args.Buffer!, args.Offset, args.BytesTransferred));
                     RegisterReceive();
                 }
                 catch (Exception e)
