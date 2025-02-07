@@ -16,6 +16,12 @@ Console.WriteLine("Listening...");
 
 while (true) ;
 
+class Knight
+{
+    public int hp;
+    public int attack;
+}
+
 
 class GameSession : Session
 {
@@ -23,8 +29,22 @@ class GameSession : Session
     {
         Console.WriteLine($"OnConnected : {endPoint}");
 
-        byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server!");
-        Send(sendBuff);
+        var knight = new Knight { hp = 100, attack = 10 };
+
+        var openSegment = SendBufferHelper.Open(4096);
+
+        if(openSegment.Array != null)
+        {
+            byte[] buffer = BitConverter.GetBytes(knight.hp);
+            byte[] buffer2 = BitConverter.GetBytes(knight.attack);          
+
+            Array.Copy(buffer, 0, openSegment.Array, openSegment.Offset, buffer.Length);
+            Array.Copy(buffer2, 0, openSegment.Array, openSegment.Offset + buffer.Length, buffer2.Length);
+
+            var sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
+            Send(sendBuff);
+        }
+
         Thread.Sleep(1000);
         Disconnect();
     }
