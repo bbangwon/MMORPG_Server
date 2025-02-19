@@ -16,36 +16,35 @@ Console.WriteLine("Listening...");
 
 while (true) ;
 
-class Knight
+class Packet
 {
-    public int hp;
-    public int attack;
+    public ushort size;
+    public ushort packetId;
 }
 
-
-class GameSession : Session
+class GameSession : PacketSession
 {
     public override void OnConnected(EndPoint endPoint)
     {
         Console.WriteLine($"OnConnected : {endPoint}");
 
-        var knight = new Knight { hp = 100, attack = 10 };
+        //var packet = new Packet { size = 100, packetId = 10 };
 
-        var openSegment = SendBufferHelper.Open(4096);
+        //var openSegment = SendBufferHelper.Open(4096);
 
-        if(openSegment.Array != null)
-        {
-            byte[] buffer = BitConverter.GetBytes(knight.hp);
-            byte[] buffer2 = BitConverter.GetBytes(knight.attack);          
+        //if(openSegment.Array != null)
+        //{
+        //    byte[] buffer = BitConverter.GetBytes(packet.size);
+        //    byte[] buffer2 = BitConverter.GetBytes(packet.packetId);          
 
-            Array.Copy(buffer, 0, openSegment.Array, openSegment.Offset, buffer.Length);
-            Array.Copy(buffer2, 0, openSegment.Array, openSegment.Offset + buffer.Length, buffer2.Length);
+        //    Array.Copy(buffer, 0, openSegment.Array, openSegment.Offset, buffer.Length);
+        //    Array.Copy(buffer2, 0, openSegment.Array, openSegment.Offset + buffer.Length, buffer2.Length);
 
-            var sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
-            Send(sendBuff);
-        }
+        //    var sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
+        //    Send(sendBuff);
+        //}
 
-        Thread.Sleep(1000);
+        Thread.Sleep(5000);
         Disconnect();
     }
 
@@ -54,11 +53,15 @@ class GameSession : Session
         Console.WriteLine($"OnDisconnected : {endPoint}");
     }
 
-    public override int OnRecv(ArraySegment<byte> buffer)
+    public override void OnRecvPacket(ArraySegment<byte> buffer)
     {
-        string recvData = Encoding.UTF8.GetString(buffer.Array!, buffer.Offset, buffer.Count);
-        Console.WriteLine($"[From Client] {recvData}");
-        return buffer.Count;
+        if (buffer.Array == null)
+            return;
+
+        ushort size = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
+        ushort id = BitConverter.ToUInt16(buffer.Array, buffer.Offset + 2);
+
+        Console.WriteLine($"RecvPacketId: {id} Size {size}");
     }
 
     public override void OnSend(int numOfBytes)
