@@ -3,21 +3,63 @@ using System.Net;
 
 namespace Server
 {
-    class Packet
+    public abstract class Packet
     {
         public ushort size;
         public ushort packetId;
+
+        public abstract ArraySegment<byte> Write();
+        public abstract void Read(ArraySegment<byte> s);
     }
 
     class PlayerInfoReq : Packet
     {
         public long playerId;
-    }
 
-    class PlayerInfoOk : Packet
-    {
-        public int hp;
-        public int attack;
+        public PlayerInfoReq()
+        {
+            this.packetId = (ushort)PacketID.PlayerInfoReq;
+        }
+
+        public override void Read(ArraySegment<byte> s)
+        {
+            if (s.Array == null)
+                return;
+
+            ushort count = 0;
+            //ushort size = BitConverter.ToUInt16(s.Array, s.Offset + count);
+            count += 2;
+
+            //ushort id = BitConverter.ToUInt16(s.Array, s.Offset + count);
+            count += 2;
+
+            //ReadOnlySpan 지정된 메모리 영역을 읽기 전용으로 제공하는 구조체
+            this.playerId = BitConverter.ToInt64(new ReadOnlySpan<byte>(s.Array, s.Offset + count, s.Count - count));
+            count += 8;
+        }
+
+        public override ArraySegment<byte> Write()
+        {
+            var s = SendBufferHelper.Open(4096);
+            ushort count = 0;
+            bool success = true;
+
+            if (s.Array != null)
+            {
+
+                count += 2;
+                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.packetId);
+                count += 2;
+                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.playerId);
+                count += 8;
+                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), count);   //size                
+            }
+
+            if (!success)
+                return default;
+
+            return SendBufferHelper.Close(count);
+        }
     }
 
     public enum PacketID
@@ -73,9 +115,10 @@ namespace Server
             {
                 case PacketID.PlayerInfoReq:
                     {
-                        long playerId = BitConverter.ToInt64(buffer.Array, buffer.Offset + count);
-                        count += 8;
-                        Console.WriteLine($"PlayerInfoReq: {playerId}");
+                        var p = new PlayerInfoReq();
+                        p.Read(buffer);
+
+                        Console.WriteLine($"PlayerInfoReq: {p.playerId}");
                     }
                     break;
                 case PacketID.PlayerInfoOk:
