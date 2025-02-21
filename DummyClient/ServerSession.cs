@@ -4,16 +4,7 @@ using System.Text;
 
 namespace DummyClient
 {
-    public abstract class Packet
-    {
-        public ushort size;
-        public ushort packetId;
-
-        public abstract ArraySegment<byte> Write();
-        public abstract void Read(ArraySegment<byte> s);
-    }
-
-    class PlayerInfoReq : Packet
+    class PlayerInfoReq
     {
         public long playerId;
         public string name = string.Empty;
@@ -55,12 +46,7 @@ namespace DummyClient
 
         public List<SkillInfo> skills = new();
 
-        public PlayerInfoReq()
-        {
-            this.packetId = (ushort)PacketID.PlayerInfoReq;
-        }
-
-        public override void Read(ArraySegment<byte> segment)
+        public void Read(ArraySegment<byte> segment)
         {
             if (segment.Array == null)
                 return;
@@ -79,7 +65,6 @@ namespace DummyClient
 
             ushort nameLen = BitConverter.ToUInt16(s[count..]);
             count += sizeof(ushort);
-
             this.name = Encoding.Unicode.GetString(s.Slice(count, nameLen));
             count += nameLen;
 
@@ -96,7 +81,7 @@ namespace DummyClient
 
         }
 
-        public override ArraySegment<byte> Write()
+        public ArraySegment<byte> Write()
         {
             var segment = SendBufferHelper.Open(4096);
             ushort count = 0;
@@ -108,7 +93,7 @@ namespace DummyClient
 
                 count += sizeof(ushort);    //Size만큼 미리 건너뛰기
 
-                success &= BitConverter.TryWriteBytes(s[count..], this.packetId);
+                success &= BitConverter.TryWriteBytes(s[count..], (ushort)PacketID.PlayerInfoReq);
                 count += sizeof(ushort);
 
                 success &= BitConverter.TryWriteBytes(s[count..], this.playerId);
