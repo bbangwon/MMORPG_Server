@@ -14,43 +14,6 @@ class {0}
 {{
     {1}
 
-    public struct SkillInfo
-    {{
-        public int id;
-        public short level;
-        public float duration;
-
-        public bool Write(Span<byte> s, ref ushort count)
-        {{
-            bool success = true;
-
-            success &= BitConverter.TryWriteBytes(s[count..], id);
-            count += sizeof(int);
-
-            success &= BitConverter.TryWriteBytes(s[count..], level);
-            count += sizeof(short);
-
-            success &= BitConverter.TryWriteBytes(s[count..], duration);
-            count += sizeof(float);
-
-            return success;
-        }}
-
-        public void Read(ReadOnlySpan<byte> s, ref ushort count)
-        {{
-            id = BitConverter.ToInt32(s[count..]);
-            count += sizeof(int);
-
-            level = BitConverter.ToInt16(s[count..]);
-            count += sizeof(short);
-
-            duration = BitConverter.ToSingle(s[count..]);
-            count += sizeof(float);
-        }}
-    }}
-
-    public List<SkillInfo> skills = new();
-
     public void Read(ArraySegment<byte> segment)
     {{
         if (segment.Array == null)
@@ -63,7 +26,6 @@ class {0}
         count += sizeof(ushort);
 
         {2}
-
     }}
 
     public ArraySegment<byte> Write()
@@ -76,16 +38,14 @@ class {0}
         if (segment.Array != null)
         {{
             var s = new Span<byte>(segment.Array, segment.Offset, segment.Count);
+            
+            //Size만큼 미리 건너뛰기
+            count += sizeof(ushort);    
 
-            count += sizeof(ushort);    //Size만큼 미리 건너뛰기
             success &= BitConverter.TryWriteBytes(s[count..], (ushort)PacketID.{0});
             count += sizeof(ushort);
 
-            success &= BitConverter.TryWriteBytes(s[count..], this.playerId);
-            count += sizeof(long);
-
             {3}
-
             success &= BitConverter.TryWriteBytes(s, count);   //size
         }}         
 
@@ -101,32 +61,87 @@ class {0}
         public static string memberFormat =
 @"public {0} {1};";
 
+        //{0} : 리스트 이름 [대문자]
+        //{1} : 리스트 이름 [소문자]
+        //{2} : 멤버 변수들
+        //{3} : 멤버 변수 Read 부분
+        //{4} : 멤버 변수 Write 부분
+        public static string memberListFormat =
+@"public struct {0}
+{{
+    {2}
+
+    public void Read(ReadOnlySpan<byte> s, ref ushort count)
+    {{
+        {3}
+    }}
+
+    public readonly bool Write(Span<byte> s, ref ushort count)
+    {{
+        bool success = true;
+
+        {4}
+        return success;
+    }}
+}}
+
+public List<{0}> {1}s = [];";
+
         // {0} : 멤버 변수 이름
         // {1} : To~ 변수 형식
         // {2} : 변수 형식
         public static string readFormat =
 @"this.{0} = BitConverter.{1}(s[count..]);
-count += sizeof({2});";
+count += sizeof({2});
+";
 
         // {0} 변수 이름
         public static string readStringFormat =
 @"ushort {0}Len = BitConverter.ToUInt16(s[count..]);
 count += sizeof(ushort);
 this.{0} = Encoding.Unicode.GetString(s.Slice(count, {0}Len));
-count += {0}Len;";
+count += {0}Len;
+";
+
+        //{0} : 리스트 이름 [대문자]
+        //{1} : 리스트 이름 [소문자]
+        public static string readListFormat =
+@"this.{1}s.Clear();
+ushort {1}Len = BitConverter.ToUInt16(s[count..]);
+count += sizeof(ushort);
+for (int i = 0; i < {1}Len; i++)
+{{
+    var {1} = new {0}();
+    {1}.Read(s, ref count);
+    {1}s.Add({1});
+}}
+";
 
         // {0} 변수 이름
         // {1} 변수 형식
         public static string writeFormat =
 @"success &= BitConverter.TryWriteBytes(s[count..], this.{0});
-count += sizeof({1});";
+count += sizeof({1});
+";
 
         // {0} 변수 이름
         public static string writeStringFormat =
-@"ushort {0}Len = (ushort)Encoding.Unicode.GetBytes(this.{0}, s[(count + sizeof(ushort))..]);
+@"ushort {0}Len = 0;
+if (!string.IsNullOrEmpty(this.{0}))
+    {0}Len = (ushort)Encoding.Unicode.GetBytes(this.{0}, s[(count + sizeof(ushort))..]);
 success &= BitConverter.TryWriteBytes(s[count..], {0}Len);
 count += sizeof(ushort);
-count += {0}Len;";
+count += {0}Len;
+";
+
+        //{0} : 리스트 이름 [대문자]
+        //{1} : 리스트 이름 [소문자]
+        public static string writeListFormat =
+@"success &= BitConverter.TryWriteBytes(s[count..], (ushort)this.{1}s.Count);
+count += sizeof(ushort);
+foreach (var {1} in this.{1}s)
+    success &= {1}.Write(s, ref count);
+";
 
     }
 }
