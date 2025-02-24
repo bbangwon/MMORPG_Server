@@ -4,6 +4,8 @@ using PacketGenerator;
 using System.Xml;
 
 string genPackets = string.Empty;
+ushort packetId = 0;
+string packetEnums = string.Empty;
 
 var settings = new XmlReaderSettings()
 {
@@ -18,12 +20,12 @@ while (r.Read())
 {
     if(r.Depth == 1 && r.NodeType == XmlNodeType.Element)
     {
-        Console.WriteLine("Valid packet node");
         ParsePacket(r);
     }
 }
 
-File.WriteAllText("GenPackets.cs", genPackets);
+string fileText = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
+File.WriteAllText("GenPackets.cs", fileText);
 
 void ParsePacket(XmlReader r)
 {
@@ -48,6 +50,10 @@ void ParsePacket(XmlReader r)
         t.Item2,
         t.Item3
         );
+
+    packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId);
+    packetEnums += Environment.NewLine;
+    packetEnums += "\t";
 }
 
 // {1} : 멤버 변수들
@@ -84,6 +90,12 @@ void ParsePacket(XmlReader r)
         string memberType = r.Name.ToLower();
         switch(memberType)
         {
+            case "byte":
+            case "sbyte":
+                memberCode += string.Format(PacketFormat.memberFormat, memberType, memberName);
+                readCode += string.Format(PacketFormat.readByteFormat, memberName, memberType);
+                writeCode += string.Format(PacketFormat.writeByteFormat, memberName, memberType);
+                break;
             case "bool":
             case "short":
             case "ushort":
@@ -96,7 +108,7 @@ void ParsePacket(XmlReader r)
                 writeCode += string.Format(PacketFormat.writeFormat, memberName, memberType);
                 break;
             case "string":
-                memberCode += string.Format(PacketFormat.memberFormat, memberType + "?", memberName);
+                memberCode += string.Format(PacketFormat.stringMemberFormat, memberType, memberName);
                 readCode += string.Format(PacketFormat.readStringFormat, memberName);
                 writeCode += string.Format(PacketFormat.writeStringFormat, memberName);
                 break;
