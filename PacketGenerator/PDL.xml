@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <PDL>
 	<packet name="PlayerInfoReq">
 		<byte name="testByte"/>
@@ -12,8 +12,5 @@
 				<int name="att"/>
 			</list>
 		</list>
-	</packet>
-	<packet name ="Test">
-		<int name="testInt"/>
 	</packet>
 </PDL>

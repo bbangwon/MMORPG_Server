@@ -1,4 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
+// See https://aka.ms/new-console-template for more information
 
 using PacketGenerator;
 using System.Xml;
@@ -7,13 +7,18 @@ string genPackets = string.Empty;
 ushort packetId = 0;
 string packetEnums = string.Empty;
 
+string pdlPath = "PDL.xml";
+
 var settings = new XmlReaderSettings()
 {
     IgnoreComments = true,
     IgnoreWhitespace = true
 };
 
-using XmlReader r = XmlReader.Create("PDL.xml", settings);
+if(args.Length >= 1)
+    pdlPath = args[0];
+
+using XmlReader r = XmlReader.Create(pdlPath, settings);
 r.MoveToContent();
 
 while (r.Read())

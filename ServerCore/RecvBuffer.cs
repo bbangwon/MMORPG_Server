@@ -1,4 +1,4 @@
-﻿namespace ServerCore
+namespace ServerCore
 {
     public class RecvBuffer
     {

@@ -5,7 +5,10 @@
         // {0} : 패킷 이름/번호 목록
         // {1} : 패킷 목록
         public static string fileFormat =
-@"public enum PacketID
+@"using ServerCore;
+using System.Text;
+
+public enum PacketID
 {{
     {0}
 }}
