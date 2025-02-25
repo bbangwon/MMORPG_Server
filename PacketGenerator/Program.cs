@@ -7,6 +7,10 @@ string genPackets = string.Empty;
 ushort packetId = 0;
 string packetEnums = string.Empty;
 
+string clientRegister = string.Empty;
+string serverRegister = string.Empty;
+
+
 string pdlPath = "PDL.xml";
 
 var settings = new XmlReaderSettings()
@@ -32,12 +36,20 @@ while (r.Read())
 string fileText = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
 File.WriteAllText("GenPackets.cs", fileText);
 
+string clientManagerText = string.Format(PacketFormat.managerFormat, clientRegister);
+File.WriteAllText("ClientPacketManager.cs", clientManagerText);
+
+string serverManagerText = string.Format(PacketFormat.managerFormat, serverRegister);
+File.WriteAllText("ServerPacketManager.cs", serverManagerText);
+
+
+
 void ParsePacket(XmlReader r)
 {
     if (r.NodeType == XmlNodeType.EndElement)
         return;
 
-    if (r.Name.ToLower() != "packet")
+    if (!r.Name.Equals("packet", StringComparison.CurrentCultureIgnoreCase))
         return;
 
     string? packetName = r["name"];
@@ -59,6 +71,17 @@ void ParsePacket(XmlReader r)
     packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId);
     packetEnums += Environment.NewLine;
     packetEnums += "\t";
+
+    if(packetName.StartsWith("S_", StringComparison.CurrentCultureIgnoreCase))
+    {
+        clientRegister += string.Format(PacketFormat.managerRegisterFormat, packetName);
+        clientRegister += Environment.NewLine;
+    }
+    else
+    {
+        serverRegister += string.Format(PacketFormat.managerRegisterFormat, packetName);
+        serverRegister += Environment.NewLine;
+    }
 }
 
 // {1} : 멤버 변수들

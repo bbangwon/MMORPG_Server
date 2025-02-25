@@ -3,7 +3,8 @@ using System.Text;
 
 public enum PacketID
 {
-    PlayerInfoReq = 1,
+    C_PlayerInfoReq = 1,
+	S_Test = 2,
 	
 }
 
@@ -15,7 +16,7 @@ interface IPacket
 }
 
 
-public class PlayerInfoReq : IPacket
+public class C_PlayerInfoReq : IPacket
 {
     public byte testByte;
 	public long playerId;
@@ -96,7 +97,7 @@ public class PlayerInfoReq : IPacket
 	
 	public List<Skill> skills = [];
 
-    public ushort Protocol => (ushort)PacketID.PlayerInfoReq;
+    public ushort Protocol => (ushort)PacketID.C_PlayerInfoReq;
 
     public void Read(ArraySegment<byte> segment)
     {
@@ -146,7 +147,7 @@ public class PlayerInfoReq : IPacket
             //Size만큼 미리 건너뛰기
             count += sizeof(ushort);    
 
-            success &= BitConverter.TryWriteBytes(s[count..], (ushort)PacketID.PlayerInfoReq);
+            success &= BitConverter.TryWriteBytes(s[count..], (ushort)PacketID.C_PlayerInfoReq);
             count += sizeof(ushort);
 
             segment.Array[segment.Offset + count] = (byte)this.testByte;
@@ -164,6 +165,56 @@ public class PlayerInfoReq : IPacket
 			count += sizeof(ushort);
 			foreach (var skill in this.skills)
 			    success &= skill.Write(s, ref count);
+			
+            success &= BitConverter.TryWriteBytes(s, count);   //size
+        }         
+
+        if (!success)
+            return default;
+
+        return SendBufferHelper.Close(count);
+    }
+}public class S_Test : IPacket
+{
+    public int testInt;
+
+    public ushort Protocol => (ushort)PacketID.S_Test;
+
+    public void Read(ArraySegment<byte> segment)
+    {
+        if (segment.Array == null)
+            return;
+
+        var s = new ReadOnlySpan<byte>(segment.Array, segment.Offset, segment.Count);
+
+        ushort count = 0;
+        count += sizeof(ushort);
+        count += sizeof(ushort);
+
+        this.testInt = BitConverter.ToInt32(s[count..]);
+		count += sizeof(int);
+		
+    }
+
+    public ArraySegment<byte> Write()
+    {
+        var segment = SendBufferHelper.Open(4096);
+
+        ushort count = 0;
+        bool success = true;            
+
+        if (segment.Array != null)
+        {
+            var s = new Span<byte>(segment.Array, segment.Offset, segment.Count);
+            
+            //Size만큼 미리 건너뛰기
+            count += sizeof(ushort);    
+
+            success &= BitConverter.TryWriteBytes(s[count..], (ushort)PacketID.S_Test);
+            count += sizeof(ushort);
+
+            success &= BitConverter.TryWriteBytes(s[count..], this.testInt);
+			count += sizeof(int);
 			
             success &= BitConverter.TryWriteBytes(s, count);   //size
         }         

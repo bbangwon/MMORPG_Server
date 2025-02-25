@@ -1,20 +1,18 @@
 using ServerCore;
 
-namespace Server
+class PacketHandler
 {
-    class PacketHandler
+    public static void C_PlayerInfoReqHandler(PacketSession session, IPacket packet)
     {
-        public static void PlayerInfoReqHandler(PacketSession session, IPacket packet)
+        if(packet is C_PlayerInfoReq p)
         {
-            if(packet is PlayerInfoReq p)
-            {
-                Console.WriteLine($"PlayerInfoReq: playerId: {p.playerId} Name: {p.name}");
+            Console.WriteLine($"PlayerInfoReq: playerId: {p.playerId} Name: {p.name}");
 
-                foreach (var skill in p.skills)
-                {
-                    Console.WriteLine($"SkillId: {skill.id} Level: {skill.level} Duration: {skill.duration}");
-                }
+            foreach (var skill in p.skills)
+            {
+                Console.WriteLine($"SkillId: {skill.id} Level: {skill.level} Duration: {skill.duration}");
             }
         }
     }
 }
+
