@@ -4,6 +4,8 @@ using System.Net;
 using Server;
 using ServerCore;
 
+PacketManager.Instance.Register();
+
 // DNS (Domain Name System)
 string host = Dns.GetHostName();
 IPHostEntry ipHost = Dns.GetHostEntry(host);
