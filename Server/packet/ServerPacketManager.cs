@@ -3,14 +3,11 @@ using ServerCore;
 class PacketManager
 {
     #region Singleton
-    static PacketManager? _instance;
-    public static PacketManager Instance
+    static PacketManager _instance = new();
+    public static PacketManager Instance => _instance;
+    public PacketManager()
     {
-        get
-        {
-            _instance ??= new PacketManager();
-            return _instance;
-        }
+        Register();
     }
     #endregion
     readonly Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>> onRecv = [];

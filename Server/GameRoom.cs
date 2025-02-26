@@ -10,7 +10,7 @@ namespace Server
             var packet = new S_Chat
             {
                 playerId = clientSession.SessionId,
-                chat = chat
+                chat = $"{chat} I am {clientSession.SessionId}"
             };
             var segment = packet.Write();
 
