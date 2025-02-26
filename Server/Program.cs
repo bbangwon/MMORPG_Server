@@ -13,8 +13,13 @@ IPAddress ipAddr = ipHost.AddressList[0];
 IPEndPoint endPoint = new(ipAddr, 7777);
 
 Listener listener = new();
-listener.Init(endPoint, () => new ClientSession());
+listener.Init(endPoint, SessionManager.Instance.Generate);
 Console.WriteLine("Listening...");
 
 while (true) ;
+
+public partial class Program
+{
+    public static GameRoom Room = new();
+}
 
