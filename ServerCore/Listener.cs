@@ -8,17 +8,20 @@ namespace ServerCore
         Socket? listenSocket;
         Func<Session>? sessionFactory;
 
-        public void Init(IPEndPoint endPoint, Func<Session>? sessionFactory)
+        public void Init(IPEndPoint endPoint, Func<Session>? sessionFactory, int register = 10, int backlog = 100)
         {
             listenSocket = new(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             this.sessionFactory += sessionFactory;
 
             listenSocket.Bind(endPoint);
-            listenSocket.Listen(10);
+            listenSocket.Listen(backlog);
 
-            SocketAsyncEventArgs args = new();
-            args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
-            RegisterAccpet(args);
+            for (int i = 0; i < register; i++)
+            {
+                SocketAsyncEventArgs args = new();
+                args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
+                RegisterAccpet(args);
+            }
         }
 
         void RegisterAccpet(SocketAsyncEventArgs args)

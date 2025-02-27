@@ -5,7 +5,6 @@ namespace Server
     public class GameRoom : IJobQueue
     {
         readonly List<ClientSession> sessions = [];
-        readonly Lock _lock = new();
         readonly JobQueue jobQueue = new();
 
         public void Broadcast(ClientSession clientSession, string chat)
