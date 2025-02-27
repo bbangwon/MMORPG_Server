@@ -1,6 +1,5 @@
 using ServerCore;
 using System.Net;
-using System.Text;
 
 namespace DummyClient
 {
@@ -23,7 +22,7 @@ namespace DummyClient
 
         public override void OnSend(int numOfBytes)
         {
-            Console.WriteLine($"Transferred bytes: {numOfBytes}");
+            //Console.WriteLine($"Transferred bytes: {numOfBytes}");
         }
     }
 

@@ -14,7 +14,11 @@ Listener listener = new();
 listener.Init(endPoint, SessionManager.Instance.Generate);
 Console.WriteLine("Listening...");
 
-while (true) ;
+while (true)
+{
+    Room.Push(() => Room.Flush());
+    Thread.Sleep(250);
+}
 
 public partial class Program
 {

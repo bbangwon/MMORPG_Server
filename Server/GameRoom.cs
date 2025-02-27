@@ -6,6 +6,7 @@ namespace Server
     {
         readonly List<ClientSession> sessions = [];
         readonly JobQueue jobQueue = new();
+        readonly List<ArraySegment<byte>> pendingList = new();
 
         public void Broadcast(ClientSession clientSession, string chat)
         {
@@ -16,8 +17,7 @@ namespace Server
             };
             var segment = packet.Write();
 
-            foreach (var session in sessions)
-                session.Send(segment);
+            pendingList.Add(segment);
         }
 
         public void Enter(ClientSession session)
@@ -34,6 +34,15 @@ namespace Server
         public void Push(Action job)
         {
             jobQueue.Push(job);
+        }
+
+        public void Flush()
+        {
+            foreach (var session in sessions)
+                session.Send(pendingList);
+
+            Console.WriteLine($"Flushed {pendingList.Count} items");
+            pendingList.Clear();
         }
     }
 }

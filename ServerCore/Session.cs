@@ -9,6 +9,8 @@ namespace ServerCore
         public sealed override int OnRecv(ArraySegment<byte> buffer)
         {
             int processLen = 0;
+            int packetCount = 0;
+
             while(true)
             {
                 if (buffer.Array == null)
@@ -24,11 +26,15 @@ namespace ServerCore
                     break;
 
                 //여기까지 왔으면 패킷 조립 가능
-                OnRecvPacket(new ArraySegment<byte>(buffer.Array, buffer.Offset, dataSize));                
+                OnRecvPacket(new ArraySegment<byte>(buffer.Array, buffer.Offset, dataSize));
+                packetCount++;
 
                 processLen += dataSize;
                 buffer = new ArraySegment<byte>(buffer.Array, buffer.Offset + dataSize, buffer.Count - dataSize);
             }
+
+            if(packetCount > 1)
+                Console.WriteLine($"패킷 모아보내기 : {packetCount}");
 
             return processLen;
         }
@@ -43,7 +49,7 @@ namespace ServerCore
         //연결 해제 관리 1일 경우 연결 해제
         int _disconnected = 0;
 
-        readonly RecvBuffer recvBuffer = new(1024);
+        readonly RecvBuffer recvBuffer = new(65535);
 
         readonly Lock _lock = new();
         readonly Queue<ArraySegment<byte>> sendQueue = new();
@@ -75,6 +81,21 @@ namespace ServerCore
             sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
 
             RegisterReceive();
+        }
+
+        public void Send(IEnumerable<ArraySegment<byte>> sendBuffList)
+        {
+            if (!sendBuffList.Any())
+                return;
+
+            lock (_lock)
+            {
+                foreach (var sendBuff in sendBuffList)
+                    sendQueue.Enqueue(sendBuff);
+
+                if (pendingList.Count == 0)
+                    RegisterSend();
+            }
         }
 
         public void Send(ArraySegment<byte> sendBuff)
