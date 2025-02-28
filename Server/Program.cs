@@ -14,14 +14,20 @@ Listener listener = new();
 listener.Init(endPoint, SessionManager.Instance.Generate);
 Console.WriteLine("Listening...");
 
+JobTimer.Instance.Push(FlushRoom);
 while (true)
 {
-    Room.Push(() => Room.Flush());
-    Thread.Sleep(250);
+    JobTimer.Instance.Flush();
 }
+
 
 public partial class Program
 {
     public static readonly GameRoom Room = new();
+    static void FlushRoom()
+    {
+        Room.Push(Room.Flush);
+        JobTimer.Instance.Push(FlushRoom, 250);
+    }
 }
 
