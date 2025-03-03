@@ -1,4 +1,6 @@
 using ServerCore;
+using System.Collections.Generic;
+using System;
 
 class PacketManager
 {
@@ -10,8 +12,8 @@ class PacketManager
         Register();
     }
     #endregion
-    readonly Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>> onRecv = [];
-    readonly Dictionary<ushort, Action<PacketSession, IPacket>> handler = [];
+    readonly Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>> onRecv = new();
+    readonly Dictionary<ushort, Action<PacketSession, IPacket>> handler = new();
 
     public void Register()
     {

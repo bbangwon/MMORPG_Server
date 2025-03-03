@@ -5,6 +5,8 @@ namespace PacketGenerator
         // {0} : 패킷 등록
         public static string managerFormat =
 @"using ServerCore;
+using System.Collections.Generic;
+using System;
 
 class PacketManager
 {{
@@ -16,8 +18,8 @@ class PacketManager
         Register();
     }}
     #endregion
-    readonly Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>> onRecv = [];
-    readonly Dictionary<ushort, Action<PacketSession, IPacket>> handler = [];
+    readonly Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>> onRecv = new();
+    readonly Dictionary<ushort, Action<PacketSession, IPacket>> handler = new();
 
     public void Register()
     {{
@@ -65,6 +67,7 @@ class PacketManager
         // {1} : 패킷 목록
         public static string fileFormat =
 @"using ServerCore;
+using System;
 using System.Text;
 
 public enum PacketID
