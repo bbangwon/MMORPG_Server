@@ -12,19 +12,19 @@ class PacketManager
         Register();
     }
     #endregion
-    readonly Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>> onRecv = new();
+    readonly Dictionary<ushort, Func<PacketSession, ArraySegment<byte>, IPacket>> makeFunc = new();
     readonly Dictionary<ushort, Action<PacketSession, IPacket>> handler = new();
 
     public void Register()
     {
           
-        onRecv.Add((ushort)PacketID.S_Chat, MakePacket<S_Chat>);
+        makeFunc.Add((ushort)PacketID.S_Chat, MakePacket<S_Chat>);
         handler.Add((ushort)PacketID.S_Chat, PacketHandler.S_ChatHandler);
 
 
     }
 
-    public void OnRecvPacket(PacketSession session, ArraySegment<byte> buffer)
+    public void OnRecvPacket(PacketSession session, ArraySegment<byte> buffer, Action<PacketSession, IPacket> onRecvCallback = null)
     {
         if (buffer.Array == null)
             return;
@@ -36,18 +36,27 @@ class PacketManager
         ushort id = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
         count += 2;
 
-        if(onRecv.TryGetValue(id, out var action))
+        if(makeFunc.TryGetValue(id, out var func))
         {
-            action.Invoke(session, buffer);
+            IPacket packet = func.Invoke(session, buffer);
+            if(onRecvCallback != null)
+                onRecvCallback.Invoke(session, packet);
+            else
+                HandlePacket(session, packet);
         }
     }
 
-    void MakePacket<T>(PacketSession session, ArraySegment<byte> buffer) where T : IPacket, new()
+    T MakePacket<T>(PacketSession session, ArraySegment<byte> buffer) where T : IPacket, new()
     {
         var packet = new T();
         packet.Read(buffer);
 
-        if(handler.TryGetValue(packet.Protocol, out var action))
+        return packet;
+    }
+
+    public void HandlePacket(PacketSession session, IPacket packet)
+    {
+        if (handler.TryGetValue(packet.Protocol, out var action))
         {
             action.Invoke(session, packet);
         }
