@@ -3,15 +3,39 @@ using ServerCore;
 
 class PacketHandler
 {
-    public static void S_ChatHandler(PacketSession session, IPacket packet)
+    public static void S_BroadcastEnterGameHandler(PacketSession session, IPacket packet)
     {
-        if(packet is S_Chat chatPacket &&
-                session is ServerSession serverSession)
+        if(session is ServerSession serverSession &&
+            packet is S_BroadcastEnterGame broadcastEnterGame)
         {
-            //if(chatPacket.playerId == 1)
-            //{
-                //Console.WriteLine(chatPacket.chat);
-            //}
+
+        }
+    }
+
+    public static void S_BroadcastLeaveGameHandler(PacketSession session, IPacket packet)
+    {
+        if (session is ServerSession serverSession &&
+            packet is S_BroadcastLeaveGame broadcastLeaveGame)
+        {
+
+        }
+    }
+
+    public static void S_PlayerListHandler(PacketSession session, IPacket packet)
+    {
+        if (session is ServerSession serverSession &&
+            packet is S_PlayerList playerList)
+        {
+
+        }
+    }
+
+
+    public static void S_BroadcastMoveHandler(PacketSession session, IPacket packet)
+    {
+        if (session is ServerSession serverSession &&
+            packet is S_BroadcastMove broadcastMove)
+        {
 
         }
     }

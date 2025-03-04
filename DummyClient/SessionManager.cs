@@ -8,6 +8,7 @@ namespace DummyClient
 
         readonly List<ServerSession> sessions = [];
         readonly Lock _lock = new ();
+        Random rand = new();
 
         public ServerSession Generate()
         {
@@ -25,13 +26,13 @@ namespace DummyClient
             {
                 foreach (var session in sessions)
                 {
-                    var chatPacket = new C_Chat
+                    var movePacket = new C_Move
                     {
-                        chat = $"Hello, Server!"
+                        posX = rand.Next(-50, 50),
+                        posY = 0,
+                        posZ = rand.Next(-50, 50)
                     };
-
-                    var segment = chatPacket.Write();
-                    session.Send(segment);
+                    session.Send(movePacket.Write());
                 }
             }
         }

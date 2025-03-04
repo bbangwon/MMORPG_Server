@@ -2,7 +2,7 @@ using ServerCore;
 using System.Collections.Generic;
 using System;
 
-class PacketManager
+public class PacketManager
 {
     #region Singleton
     static PacketManager _instance = new();
@@ -18,8 +18,20 @@ class PacketManager
     public void Register()
     {
           
-        makeFunc.Add((ushort)PacketID.S_Chat, MakePacket<S_Chat>);
-        handler.Add((ushort)PacketID.S_Chat, PacketHandler.S_ChatHandler);
+        makeFunc.Add((ushort)PacketID.S_BroadcastEnterGame, MakePacket<S_BroadcastEnterGame>);
+        handler.Add((ushort)PacketID.S_BroadcastEnterGame, PacketHandler.S_BroadcastEnterGameHandler);
+
+      
+        makeFunc.Add((ushort)PacketID.S_BroadcastLeaveGame, MakePacket<S_BroadcastLeaveGame>);
+        handler.Add((ushort)PacketID.S_BroadcastLeaveGame, PacketHandler.S_BroadcastLeaveGameHandler);
+
+      
+        makeFunc.Add((ushort)PacketID.S_PlayerList, MakePacket<S_PlayerList>);
+        handler.Add((ushort)PacketID.S_PlayerList, PacketHandler.S_PlayerListHandler);
+
+      
+        makeFunc.Add((ushort)PacketID.S_BroadcastMove, MakePacket<S_BroadcastMove>);
+        handler.Add((ushort)PacketID.S_BroadcastMove, PacketHandler.S_BroadcastMoveHandler);
 
 
     }
