@@ -1,6 +1,7 @@
 using ServerCore;
 using System;
 using System.Text;
+using System.Collections.Generic;
 
 public enum PacketID
 {
@@ -57,7 +58,7 @@ public class S_BroadcastEnterGame : IPacket
 
     public ArraySegment<byte> Write()
     {
-        var segment = SendBufferHelper.Open(4096);
+        var segment = SendBufferHelper.Open(65535);
 
         ushort count = 0;
         bool success = true;            
@@ -114,7 +115,7 @@ public class S_BroadcastEnterGame : IPacket
 
     public ArraySegment<byte> Write()
     {
-        var segment = SendBufferHelper.Open(4096);
+        var segment = SendBufferHelper.Open(65535);
 
         ushort count = 0;
         bool success = true;            
@@ -162,7 +163,7 @@ public class S_BroadcastEnterGame : IPacket
 
     public ArraySegment<byte> Write()
     {
-        var segment = SendBufferHelper.Open(4096);
+        var segment = SendBufferHelper.Open(65535);
 
         ushort count = 0;
         bool success = true;            
@@ -240,7 +241,7 @@ public class S_BroadcastEnterGame : IPacket
 	    }
 	}
 	
-	public List<Player> players = [];
+	public List<Player> players = new();
 
     public ushort Protocol => (ushort)PacketID.S_PlayerList;
 
@@ -269,7 +270,7 @@ public class S_BroadcastEnterGame : IPacket
 
     public ArraySegment<byte> Write()
     {
-        var segment = SendBufferHelper.Open(4096);
+        var segment = SendBufferHelper.Open(65535);
 
         ushort count = 0;
         bool success = true;            
@@ -329,7 +330,7 @@ public class S_BroadcastEnterGame : IPacket
 
     public ArraySegment<byte> Write()
     {
-        var segment = SendBufferHelper.Open(4096);
+        var segment = SendBufferHelper.Open(65535);
 
         ushort count = 0;
         bool success = true;            
@@ -397,7 +398,7 @@ public class S_BroadcastEnterGame : IPacket
 
     public ArraySegment<byte> Write()
     {
-        var segment = SendBufferHelper.Open(4096);
+        var segment = SendBufferHelper.Open(65535);
 
         ushort count = 0;
         bool success = true;            

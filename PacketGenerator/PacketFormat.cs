@@ -78,6 +78,7 @@ public class PacketManager
 @"using ServerCore;
 using System;
 using System.Text;
+using System.Collections.Generic;
 
 public enum PacketID
 {{
@@ -127,7 +128,7 @@ public interface IPacket
 
     public ArraySegment<byte> Write()
     {{
-        var segment = SendBufferHelper.Open(4096);
+        var segment = SendBufferHelper.Open(65535);
 
         ushort count = 0;
         bool success = true;            
@@ -187,7 +188,7 @@ public interface IPacket
     }}
 }}
 
-public List<{0}> {1}s = [];";
+public List<{0}> {1}s = new();";
 
         // {0} : 변수 이름
         // {1} : To~ 변수 형식

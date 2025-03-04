@@ -4,25 +4,40 @@ using UnityEngine;
 
 class PacketHandler
 {
-    public static void S_ChatHandler(PacketSession session, IPacket packet)
+    public static void S_BroadcastEnterGameHandler(PacketSession session, IPacket packet)
     {
-        if(packet is S_Chat chatPacket &&
-                session is ServerSession serverSession)
+        if (session is ServerSession serverSession &&
+            packet is S_BroadcastEnterGame broadcastEnterGame)
         {
+            PlayerManager.Instance.EnterGame(broadcastEnterGame);
+        }
+    }
 
-            //if(chatPacket.playerId == 1)
-            {
-                Debug.Log(chatPacket.chat);
+    public static void S_BroadcastLeaveGameHandler(PacketSession session, IPacket packet)
+    {
+        if (session is ServerSession serverSession &&
+            packet is S_BroadcastLeaveGame broadcastLeaveGame)
+        {
+            PlayerManager.Instance.LeaveGame(broadcastLeaveGame);
+        }
+    }
 
-                GameObject go = GameObject.Find("Player");
-                if(go == null)
-                    Debug.Log("Player not found");
-                else
-                    Debug.Log("Player found");
+    public static void S_PlayerListHandler(PacketSession session, IPacket packet)
+    {
+        if (session is ServerSession serverSession &&
+            packet is S_PlayerList playerList)
+        {
+            PlayerManager.Instance.Add(playerList);
+        }
+    }
 
-                //Console.WriteLine(chatPacket.chat);
-            }
 
+    public static void S_BroadcastMoveHandler(PacketSession session, IPacket packet)
+    {
+        if (session is ServerSession serverSession &&
+            packet is S_BroadcastMove broadcastMove)
+        {
+            PlayerManager.Instance.Move(broadcastMove);
         }
     }
 }

@@ -11,7 +11,7 @@ IPAddress ipAddr = ipHost.AddressList[0];
 IPEndPoint endPoint = new(ipAddr, 7777);
 
 Connector connector = new();
-connector.Connect(endPoint, SessionManager.Instance.Generate, 10);
+connector.Connect(endPoint, SessionManager.Instance.Generate, 500);
 
 while (true)
 {

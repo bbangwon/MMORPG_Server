@@ -36,7 +36,7 @@ public class PacketManager
 
     }
 
-    public void OnRecvPacket(PacketSession session, ArraySegment<byte> buffer, Action<PacketSession, IPacket>? onRecvCallback = null)
+    public void OnRecvPacket(PacketSession session, ArraySegment<byte> buffer, Action<PacketSession, IPacket> onRecvCallback = null)
     {
         if (buffer.Array == null)
             return;
